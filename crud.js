@@ -10,6 +10,7 @@ crud.use(cors());
 
 //crud usuarios 
 crud.post("/api/v1/create/User", (req, res) => {
+    req.body.is_active = true;
     const newUser = new User(req.body);
     newUser.save((err, user) => {
         !err ? res.status(200).send(user) : res.status(400).send(err);
