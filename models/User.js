@@ -6,7 +6,10 @@ const UserSchema = new mongoose.Schema({
             type: String,
             required: true
         },
-        numeroDocumento: Number,
+        numeroDocumento: {
+            type: Number,
+            required: true
+        },
         is_active: {
             type: Number,
             required: true
@@ -17,13 +20,12 @@ const UserSchema = new mongoose.Schema({
         },
         genero: {
             type: String,
-            required: trues
+            required: true
         },
         nombres: {
             type: String,
             required: true
         },
-
         apellidos: {
             type: String,
             required: true
@@ -40,12 +42,8 @@ const UserSchema = new mongoose.Schema({
             type: String,
             required: true
         },
-        contraseña: {
-            type: Number,
-            required: true
-        },
-        confirmarContraseña: {
-            type: Number,
+        contrasena: {
+            type: String,
             required: true
         },
         rol: {
