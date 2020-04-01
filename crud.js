@@ -1,6 +1,6 @@
 const express = require("express");
 const crud = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 const cors = require("cors");
 const { User, Proveedores } = require("./models/index")
 
@@ -22,31 +22,31 @@ crud.get("/api/v1/get/Users", (req, res) => {
             res.status(200).send(result);
         })
         .catch(err => {
-            res.status(404).send(err);
+            res.status(400).send(err);
         });
 });
 
 crud.get("/api/v1/get/User/:Userid", (req, res) => {
     User.findById(req.params.Userid, (err, response) => {
-        !err ? res.status(200).send(response) : res.status(404).send(err);
+        !err ? res.status(200).send(response) : res.status(400).send(err);
     });
 });
 
 crud.put("/api/v1/update/User/:Userid", (req, res) => {
     User.findByIdAndUpdate(req.params.Userid, { $set: req.body }, { new: true }, (err, response) => {
-        !err ? res.status(200).send(response) : res.status(404).send(err);
+        !err ? res.status(200).send(response) : res.status(400).send(err);
     });
 });
 
 crud.delete("/api/v1/delete/User/:Userid", (req, res) => {
     User.findByIdAndUpdate(req.params.Userid, { $set: { is_active: false } }, { new: true }, (err, response) => {
-        !err ? res.status(200).send({ message: "usuario eliminado" }) : res.status(404).send(err);
+        !err ? res.status(200).send({ message: "usuario eliminado" }) : res.status(400).send(err);
     });
 });
 
 crud.patch("/api/v1/activate/User/:Userid", (req, res) => {
     User.findByIdAndUpdate(req.params.Userid, { $set: { is_active: true } }, { new: true }, (err, response) => {
-        !err ? res.status(200).send(response) : res.status(404).send(err);
+        !err ? res.status(200).send(response) : res.status(400).send(err);
     });
 });
 
@@ -92,6 +92,7 @@ crud.patch("/api/v1/activate/Proveedores/:Proveedoresid", (req, res) => {
         !err ? res.status(200).send(response) : res.status(404).send(err);
     });
 });
+
 
 
 
