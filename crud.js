@@ -1,6 +1,6 @@
 const express = require("express");
 const crud = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 const cors = require("cors");
 const { User, Proveedores } = require("./models/index")
 
@@ -102,6 +102,6 @@ crud.listen(PORT, err => {
     if (err) {
         console.log(err)
     } else {
-        console.log(`server running on port${PORT}`);
+        console.log(`server running on port ${PORT}`);
     }
 });

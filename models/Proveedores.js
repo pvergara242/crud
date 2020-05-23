@@ -1,19 +1,35 @@
 const mongoose = require("mongoose");
 
 const ProveedoresSchema = new mongoose.Schema({
-        name: {
+        codigo_proveedor: {
             type: String,
             required: true
         },
-        last_name: {
+        nombre: {
             type: String,
             required: true
         },
-        document: Number,
+        nit: Number,
         is_active: {
             type: Boolean,
             default: true
-        }
+        },
+        descripcion: {
+            type: String,
+            required: true
+        },
+        direccion: {
+            type: String,
+            required: true
+        },
+        telefono: {
+            type: String,
+            required: true
+        },
+        cod_estado: {
+            type: String,
+            required: true
+        },
     }, { timestamps: true }
 
 );
