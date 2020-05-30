@@ -3,6 +3,7 @@ const dburl = `mongodb+srv://Paola_Veragara:pao940816ap@cluster0-4bfxu.mongodb.n
 const User = require("./User");
 const Proveedores = require("./Proveedores");
 const Productos = require("./Productos");
+const DatosPersonales = require("./DatosPersonales");
 
 mongoose.connect(dburl, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }, (err) => {
     !err ? console.log("conexion exitosa") : console.log(err);
@@ -11,5 +12,6 @@ mongoose.connect(dburl, { useNewUrlParser: true, useUnifiedTopology: true, useFi
 module.exports = {
     User,
     Proveedores,
-    Productos
+    Productos,
+    DatosPersonales
 };

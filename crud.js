@@ -2,48 +2,23 @@ const express = require("express");
 const crud = express();
 const PORT = process.env.PORT || 3000;
 const cors = require("cors");
-const { User, Proveedores, Productos } = require("./models/index")
+const { User, Proveedores, Productos, DatosPersonales } = require("./models/index");
+const UserController = require("./controller/UserController");
 
 crud.use(express.urlencoded({ extended: true }));
 crud.use(express.json());
 crud.use(cors());
 
 //crud usuarios 
-crud.post("/api/v1/create/User", (req, res) => {
-    req.body.is_active = true;
-    const newUser = new User(req.body);
-    newUser.save((err, user) => {
-        !err ? res.status(200).send(user) : res.status(400).send(err);
-    });
-});
+crud.post("/api/v1/usuarios", UserController.new);
 
-crud.get("/api/v1/get/Users", (req, res) => {
-    User.find({ is_active: true })
-        .then(result => {
-            res.status(200).send(result);
-        })
-        .catch(err => {
-            res.status(400).send(err);
-        });
-});
+crud.get("/api/v1/usuarios", UserController.all);
 
-crud.get("/api/v1/get/User/:Userid", (req, res) => {
-    User.findById(req.params.Userid, (err, response) => {
-        !err ? res.status(200).send(response) : res.status(400).send(err);
-    });
-});
+crud.get("/api/v1/usuarios/:Userid", UserController.find);
 
-crud.put("/api/v1/update/User/:Userid", (req, res) => {
-    User.findByIdAndUpdate(req.params.Userid, { $set: req.body }, { new: true }, (err, response) => {
-        !err ? res.status(200).send(response) : res.status(400).send(err);
-    });
-});
+crud.put("/api/v1/usuarios/:Userid", UserController.update);
 
-crud.delete("/api/v1/delete/User/:Userid", (req, res) => {
-    User.findByIdAndUpdate(req.params.Userid, { $set: { is_active: false } }, { new: true }, (err, response) => {
-        !err ? res.status(200).send({ message: "usuario eliminado" }) : res.status(400).send(err);
-    });
-});
+crud.delete("/api/v1/usuarios/:Userid", UserController.delete);
 
 crud.patch("/api/v1/activate/User/:Userid", (req, res) => {
     User.findByIdAndUpdate(req.params.Userid, { $set: { is_active: true } }, { new: true }, (err, response) => {

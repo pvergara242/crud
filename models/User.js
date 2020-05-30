@@ -2,53 +2,25 @@ const mongoose = require("mongoose");
 
 
 const UserSchema = new mongoose.Schema({
-        tipoDeDocumento: {
-            type: String,
-            required: true
-        },
-        numeroDocumento: {
-            type: Number,
-            required: true
-        },
-        is_active: {
-            type: Number,
-            required: true
-        },
-        fechaNacimiento: {
-            type: Date,
-            required: true
-        },
-        genero: {
-            type: String,
-            required: true
-        },
-        nombres: {
-            type: String,
-            required: true
-        },
-        apellidos: {
-            type: String,
-            required: true
-        },
-        telefonoFijo: {
-            type: Number,
-            required: true
-        },
-        celular: {
-            type: Number,
-            required: true
-        },
-        correo: {
-            type: String,
-            required: true
-        },
-        contrasena: {
+        clave: {
             type: String,
             required: true
         },
         rol: {
             type: String,
             required: true
+        },
+        estado: {
+            type: String,
+            required: true
+        },
+        correo: {
+            type: String,
+            required: true
+        },
+        datosPersonales: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'DatosPersonales'
         },
 
     }, { timestamps: true }
