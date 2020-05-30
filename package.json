@@ -8,7 +8,9 @@
         "express": "^4.17.1",
         "mongoose": "^5.9.4"
     },
-    "devDependencies": {},
+    "devDependencies": {
+        "nodemon": "^2.0.4"
+    },
     "scripts": {
         "start": "node crud.js",
         "dev": "nodemon crud.js"
