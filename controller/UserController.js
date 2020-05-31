@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const DatosPersonales = require("../models/DatosPersonales");
+const auth = require("../configuration/auth");
+const jwt = require("jsonwebtoken");
 
 let UserController = {
 	all: async (req, res) => {
@@ -22,24 +24,76 @@ let UserController = {
 	new: async (req, res) => {
 		findAndCreateDatosPersonales(req, res, funcCreateUsuario);
 	},
-	find: async(req, res) => {
+	find: async (req, res) => {
 		User.findById(req.params.Userid, (err, response) => {
 	        !err ? res.status(200).send(response) : res.status(400).send(err);
 	    }).populate('datosPersonales');
 	},
-	update: async(req, res) => {
+	update: async (req, res) => {
 		findAndUpdateDatosPersonales(req, res);
 	},
-	delete: async(req, res) => {
+	delete: async (req, res) => {
 		User.findByIdAndUpdate(req.params.Userid, { $set: { estado: "Inactivo" } }, { new: false }, (err, response) => {
 	        !err ? res.status(204).send() : res.status(400).send(err);
 	    });
 	},
-	activate: async(req, res) => {
+	activate: async (req, res) => {
 		User.findByIdAndUpdate(req.params.Userid, { $set: { estado: 'Activo' } }, { new: false }, (err, response) => {
 	        !err ? res.status(204).send(response) : res.status(400).send(err);
 	    });
+	},
+	signIn: async (req, res) => {
+		var params = { 
+			estado: "Activo",
+			correo: req.body.correo
+		};
+
+		User.findOne(params).populate('datosPersonales')
+			.then(result => {
+				if (result && result !== null) {
+					result.comparePassword(req.body.pwd, (err, matches) => {
+						if (!err && err !== null) {
+							console.log(err);
+							res.status(500).send({ message: 'Error autenticando usuario' }); 
+						} else if (matches) {
+							generateToken(result)
+								.then(token => {
+									res.status(200).send(
+										{ 
+											token: token,
+											usuario: {
+												nombres: result.datosPersonales.nombres,
+												apellidos: result.datosPersonales.apellidos,
+												nombreCompleto: result.datosPersonales.nombreCompleto,
+												rol: result.rol
+											}
+										}
+									);
+								})
+								.catch(onRejected => {
+									console.log(err);
+				            		res.status(500).send(err);
+								});
+						} else {
+							res.status(401).send({ message: 'Unauthorized' });
+						}
+					})
+				} else {
+					res.status(401).send({ message: 'Unauthorized' });
+				}
+	        })
+	        .catch(err => {
+	        	console.log(err);
+	            res.status(500).send(err);
+	        });
 	}
+}
+
+async function generateToken(user) {
+	return jwt.sign({ correo: user.correo }, auth.secret, {
+		algorithm: "HS256",
+		expiresIn: 60 * 60,
+	});
 }
 
 function funcCreateUsuario (req, res, datosPersonalId) {

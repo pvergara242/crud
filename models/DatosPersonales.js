@@ -45,6 +45,10 @@ const DatosPersonalesSchema = new mongoose.Schema({
 
 );
 
+DatosPersonalesSchema.virtual('nombreCompleto').get(function() {
+  return this.nombres + ' ' + this.apellidos
+});
+
 const DatosPersonales = mongoose.model("DatosPersonales", DatosPersonalesSchema);
 
 module.exports = DatosPersonales;

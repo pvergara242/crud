@@ -18,6 +18,7 @@ crud.get("/api/v1/usuarios/:Userid", UserController.find);
 crud.put("/api/v1/usuarios/:Userid", UserController.update);
 crud.delete("/api/v1/usuarios/:Userid", UserController.delete);
 crud.patch("/api/v1/usuarios/:Userid/activate", UserController.activate);
+crud.post("/api/v1/auth/signin", UserController.signIn);
 
 // Crud de proveedores
 crud.post("/api/v1/proveedores", ProveedorController.new);
