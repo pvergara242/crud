@@ -1,7 +1,6 @@
 const User = require("../models/User");
 const DatosPersonales = require("../models/DatosPersonales");
 const auth = require("../configuration/auth");
-const jwt = require("jsonwebtoken");
 
 let UserController = {
 	all: async (req, res) => {
@@ -56,7 +55,7 @@ let UserController = {
 							console.log(err);
 							res.status(500).send({ message: 'Error autenticando usuario' }); 
 						} else if (matches) {
-							generateToken(result)
+							auth.generateToken(result)
 								.then(token => {
 									res.status(200).send(
 										{ 
@@ -87,13 +86,6 @@ let UserController = {
 	            res.status(500).send(err);
 	        });
 	}
-}
-
-async function generateToken(user) {
-	return jwt.sign({ correo: user.correo }, auth.secret, {
-		algorithm: "HS256",
-		expiresIn: 60 * 60,
-	});
 }
 
 function funcCreateUsuario (req, res, datosPersonalId) {

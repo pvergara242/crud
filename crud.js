@@ -6,18 +6,22 @@ require("./models/database");
 const UserController = require("./controller/UserController");
 const ProveedorController = require("./controller/ProveedorController");
 const ProductoController = require("./controller/ProductoController");
+const auth = require("./configuration/auth");
 
 crud.use(express.urlencoded({ extended: true }));
 crud.use(express.json());
 crud.use(cors());
 
+crud.use('/api/v1/proveedores', auth.authorize);
+crud.use('/api/v1/productos', auth.authorize);
+
 //crud usuarios 
 crud.post("/api/v1/usuarios", UserController.new);
-crud.get("/api/v1/usuarios", UserController.all);
-crud.get("/api/v1/usuarios/:Userid", UserController.find);
-crud.put("/api/v1/usuarios/:Userid", UserController.update);
-crud.delete("/api/v1/usuarios/:Userid", UserController.delete);
-crud.patch("/api/v1/usuarios/:Userid/activate", UserController.activate);
+crud.get("/api/v1/usuarios", auth.authorize, UserController.all);
+crud.get("/api/v1/usuarios/:Userid", auth.authorize, UserController.find);
+crud.put("/api/v1/usuarios/:Userid", auth.authorize, UserController.update);
+crud.delete("/api/v1/usuarios/:Userid", auth.authorize, UserController.delete);
+crud.patch("/api/v1/usuarios/:Userid/activate", auth.authorize, UserController.activate);
 crud.post("/api/v1/auth/signin", UserController.signIn);
 
 // Crud de proveedores
