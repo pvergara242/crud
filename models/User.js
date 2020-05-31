@@ -1,48 +1,8 @@
 const mongoose = require("mongoose");
-
+var bcrypt = require('bcrypt');
 
 const UserSchema = new mongoose.Schema({
-        tipoDeDocumento: {
-            type: String,
-            required: true
-        },
-        numeroDocumento: {
-            type: Number,
-            required: true
-        },
-        is_active: {
-            type: Number,
-            required: true
-        },
-        fechaNacimiento: {
-            type: Date,
-            required: true
-        },
-        genero: {
-            type: String,
-            required: true
-        },
-        nombres: {
-            type: String,
-            required: true
-        },
-        apellidos: {
-            type: String,
-            required: true
-        },
-        telefonoFijo: {
-            type: Number,
-            required: true
-        },
-        celular: {
-            type: Number,
-            required: true
-        },
-        correo: {
-            type: String,
-            required: true
-        },
-        contrasena: {
+        clave: {
             type: String,
             required: true
         },
@@ -50,10 +10,40 @@ const UserSchema = new mongoose.Schema({
             type: String,
             required: true
         },
+        estado: {
+            type: String,
+            required: true
+        },
+        correo: {
+            type: String,
+            required: true
+        },
+        datosPersonales: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'DatosPersonales'
+        },
 
     }, { timestamps: true }
 
 );
+
+UserSchema.pre('save', function (next) {
+    var usuario = this;
+    if (!usuario.isModified('clave')) {return next()};
+    bcrypt.hash(usuario.clave, 10).then((hashedPassword) => {
+        usuario.clave = hashedPassword;
+        next();
+    })
+}, function (err) {
+    next(err)
+});
+
+UserSchema.methods.comparePassword = function(candidatePassword, next){    
+    bcrypt.compare(candidatePassword, this.clave, function(err,isMatch){
+        if (err) return next('Unauthorization error');
+        return next(null, isMatch);
+    });
+};
 
 const User = mongoose.model("Usuarios", UserSchema);
 
