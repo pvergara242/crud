@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-
 const DatosPersonalesSchema = new mongoose.Schema({
         tipoDocumento: {
             type: String,

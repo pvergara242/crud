@@ -2,8 +2,10 @@ const express = require("express");
 const crud = express();
 const PORT = process.env.PORT || 3000;
 const cors = require("cors");
-const { User, Proveedores, Productos, DatosPersonales } = require("./models/index");
+require("./models/database");
 const UserController = require("./controller/UserController");
+const ProveedorController = require("./controller/ProveedorController");
+const ProductoController = require("./controller/ProductoController");
 
 crud.use(express.urlencoded({ extended: true }));
 crud.use(express.json());
@@ -11,116 +13,27 @@ crud.use(cors());
 
 //crud usuarios 
 crud.post("/api/v1/usuarios", UserController.new);
-
 crud.get("/api/v1/usuarios", UserController.all);
-
 crud.get("/api/v1/usuarios/:Userid", UserController.find);
-
 crud.put("/api/v1/usuarios/:Userid", UserController.update);
-
 crud.delete("/api/v1/usuarios/:Userid", UserController.delete);
-
-crud.patch("/api/v1/activate/User/:Userid", (req, res) => {
-    User.findByIdAndUpdate(req.params.Userid, { $set: { is_active: true } }, { new: true }, (err, response) => {
-        !err ? res.status(200).send(response) : res.status(400).send(err);
-    });
-});
+crud.patch("/api/v1/usuarios/:Userid/activate", UserController.activate);
 
 // Crud de proveedores
-crud.post("/api/v1/proveedores", (req, res) => {
-    req.body.estado = "Activo";
-    const newProveedores = new Proveedores(req.body);
-    newProveedores.save((err, response) => {
-        !err ? res.status(200).send(response) : res.status(400).send(err);
-    });
-});
-
-crud.get("/api/v1/proveedores", (req, res) => {
-    var params;
-
-    if (req.query.includeInactive && req.query.includeInactive === 'true') {
-        params = {};
-    } else {
-        params = { estado: "Activo" };
-    }
-
-    Proveedores.find(params)
-        .then(result => {
-            res.status(200).send(result);
-        })
-        .catch(err => {
-            res.status(404).send(err);
-        });
-});
-
-crud.get("/api/v1/proveedores/:Proveedoresid", (req, res) => {
-    Proveedores.findById(req.params.Proveedoresid, (err, response) => {
-        !err ? res.status(200).send(response) : res.status(404).send(err);
-    });
-});
-
-crud.put("/api/v1/proveedores/:Proveedoresid", (req, res) => {
-    Proveedores.findByIdAndUpdate(req.params.Proveedoresid, { $set: req.body }, { new: true }, (err, response) => {
-        !err ? res.status(204).send() : res.status(404).send(err);
-    });
-});
-
-crud.delete("/api/v1/proveedores/:proveedorId", (req, res) => {
-    Proveedores.findByIdAndUpdate(req.params.proveedorId, { $set: { estado: "Inactivo" } }, { new: true }, (err, response) => {
-        !err ? res.status(204).send() : res.status(404).send(err);
-    });
-});
-
-crud.patch("/api/v1/activate/Proveedores/:Proveedoresid", (req, res) => {
-    Proveedores.findByIdAndUpdate(req.params.Proveedoresid, { $set: { is_active: true } }, { new: true }, (err, response) => {
-        !err ? res.status(200).send(response) : res.status(404).send(err);
-    });
-});
+crud.post("/api/v1/proveedores", ProveedorController.new);
+crud.get("/api/v1/proveedores", ProveedorController.all);
+crud.get("/api/v1/proveedores/:Proveedoresid", ProveedorController.find);
+crud.put("/api/v1/proveedores/:Proveedoresid", ProveedorController.update);
+crud.delete("/api/v1/proveedores/:proveedorId", ProveedorController.delete);
+crud.patch("/api/v1/proveedores/:Proveedoresid/activate", ProveedorController.activate);
 
 // Crud de proveedores
-crud.post("/api/v1/productos", (req, res) => {
-    req.body.estado = "Activo";
-    const newProducto = new Productos(req.body);
-    newProducto.save((err, response) => {
-        !err ? res.status(200).send(response) : res.status(400).send(err);
-    });
-});
-
-crud.get("/api/v1/productos", (req, res) => {
-    var params;
-
-    if (req.query.includeInactive && req.query.includeInactive === 'true') {
-        params = {};
-    } else {
-        params = { estado: "Activo" };
-    }
-
-    Productos.find(params).populate('proveedor')
-        .then(result => {
-            res.status(200).send(result);
-        })
-        .catch(err => {
-            res.status(404).send(err);
-        });
-});
-
-crud.get("/api/v1/productos/:ProductoId", (req, res) => {
-    Productos.findById(req.params.ProductoId, (err, response) => {
-        !err ? res.status(200).send(response) : res.status(404).send(err);
-    }).populate('proveedor');
-});
-
-crud.put("/api/v1/productos/:productoId", (req, res) => {
-    Productos.findByIdAndUpdate(req.params.productoId, { $set: req.body }, { new: true }, (err, response) => {
-        !err ? res.status(204).send() : res.status(404).send(err);
-    });
-});
-
-crud.delete("/api/v1/productos/:productoId", (req, res) => {
-    Productos.findByIdAndUpdate(req.params.productoId, { $set: { estado: "Inactivo" } }, { new: true }, (err, response) => {
-        !err ? res.status(204).send() : res.status(404).send(err);
-    });
-});
+crud.post("/api/v1/productos", ProductoController.new);
+crud.get("/api/v1/productos", ProductoController.all);
+crud.get("/api/v1/productos/:ProductoId", ProductoController.find);
+crud.put("/api/v1/productos/:productoId", ProductoController.update);
+crud.delete("/api/v1/productos/:productoId", ProductoController.delete);
+crud.patch("/api/v1/productos/:productoId/activate", ProductoController.activate);
 
 crud.listen(PORT, err => {
     if (err) {

@@ -31,8 +31,13 @@ let UserController = {
 		findAndUpdateDatosPersonales(req, res);
 	},
 	delete: async(req, res) => {
-		User.findByIdAndUpdate(req.params.Userid, { $set: { estado: "Inactivo" } }, { new: true }, (err, response) => {
+		User.findByIdAndUpdate(req.params.Userid, { $set: { estado: "Inactivo" } }, { new: false }, (err, response) => {
 	        !err ? res.status(204).send() : res.status(400).send(err);
+	    });
+	},
+	activate: async(req, res) => {
+		User.findByIdAndUpdate(req.params.Userid, { $set: { estado: 'Activo' } }, { new: false }, (err, response) => {
+	        !err ? res.status(204).send(response) : res.status(400).send(err);
 	    });
 	}
 }
@@ -66,7 +71,7 @@ var actualizarUsuario = function funcActualizarUsuario (req, res, datosPersonalI
     };
     
     const newUser = new User(usuario);
-    User.findByIdAndUpdate(req.params.Userid, { $set: usuario }, { new: true }, (err, response) => {
+    User.findByIdAndUpdate(req.params.Userid, { $set: usuario }, { new: false }, (err, response) => {
         !err ? res.status(204).send() : res.status(400).send(err);
     });
 }
@@ -135,7 +140,7 @@ function findAndUpdateDatosPersonales(req, res) {
             console.log('datosPersonalId: ', datosPersonalId);
             console.log('datoPersonalExistente: ', datoPersonalExistente);
 
-            DatosPersonales.findByIdAndUpdate(datosPersonalId, { $set: datoPersonal }, { new: true })
+            DatosPersonales.findByIdAndUpdate(datosPersonalId, { $set: datoPersonal }, { new: false })
             .then(datoPersonalActualizado => {
             	actualizarUsuario(req, res, datosPersonalId);
 	        })
