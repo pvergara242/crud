@@ -43,11 +43,67 @@ let UserController = {
 	},
 	signIn: async (req, res) => {
 		var params = { 
-			estado: "Activo",
-			correo: req.body.correo
+			numeroDocumento: req.body.numeroDocumento
 		};
 
-		User.findOne(params).populate('datosPersonales')
+		DatosPersonales.findOne(params)
+			.then(datoPersonal => {
+				
+				if (datoPersonal && datoPersonal !== null) {
+					var userParams = {
+						estado: "Activo",
+						datosPersonales: datoPersonal._id
+					};
+
+					User.findOne(userParams)
+						.then(result => {
+
+							if (result && result !== null) {
+								result.comparePassword(req.body.pwd, (err, matches) => {
+									if (!err && err !== null) {
+										console.log(err);
+										res.status(500).send({ message: 'Error autenticando usuario' }); 
+									} else if (matches) {
+										auth.generateToken(result)
+											.then(token => {
+												res.status(200).send(
+													{ 
+														token: token,
+														usuario: {
+															nombres: datoPersonal.nombres,
+															apellidos: datoPersonal.apellidos,
+															nombreCompleto: datoPersonal.nombreCompleto,
+															rol: result.rol
+														}
+													}
+												);
+											})
+											.catch(onRejected => {
+												console.log(err);
+							            		res.status(500).send(err);
+											});
+									} else {
+										res.status(401).send({ message: 'Unauthorized' });
+									}
+								})
+							} else {
+								res.status(401).send({ message: 'Unauthorized' });
+							}
+				        })
+				        .catch(err => {
+				        	console.log(err);
+				            res.status(500).send(err);
+				        });
+				} else {
+					res.status(401).send({ message: 'Unauthorized' });
+				}
+			})
+			.catch(err => {
+	        	console.log(err);
+	            res.status(500).send(err);
+	        });
+
+		/*User.findOne(params).populate('datosPersonales')
 			.then(result => {
 				if (result && result !== null) {
 					result.comparePassword(req.body.pwd, (err, matches) => {
@@ -84,7 +140,7 @@ let UserController = {
 	        .catch(err => {
 	        	console.log(err);
 	            res.status(500).send(err);
-	        });
+	        });*/
 	}
 }
 
