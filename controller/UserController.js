@@ -102,55 +102,16 @@ let UserController = {
 	        	console.log(err);
 	            res.status(500).send(err);
 	        });
-
-		/*User.findOne(params).populate('datosPersonales')
-			.then(result => {
-				if (result && result !== null) {
-					result.comparePassword(req.body.pwd, (err, matches) => {
-						if (!err && err !== null) {
-							console.log(err);
-							res.status(500).send({ message: 'Error autenticando usuario' }); 
-						} else if (matches) {
-							auth.generateToken(result)
-								.then(token => {
-									res.status(200).send(
-										{ 
-											token: token,
-											usuario: {
-												nombres: result.datosPersonales.nombres,
-												apellidos: result.datosPersonales.apellidos,
-												nombreCompleto: result.datosPersonales.nombreCompleto,
-												rol: result.rol
-											}
-										}
-									);
-								})
-								.catch(onRejected => {
-									console.log(err);
-				            		res.status(500).send(err);
-								});
-						} else {
-							res.status(401).send({ message: 'Unauthorized' });
-						}
-					})
-				} else {
-					res.status(401).send({ message: 'Unauthorized' });
-				}
-	        })
-	        .catch(err => {
-	        	console.log(err);
-	            res.status(500).send(err);
-	        });*/
 	}
 }
 
 function funcCreateUsuario (req, res, datosPersonalId) {
     const usuario = {
-    clave: req.body.clave,
-    rol: req.body.rol,
-    estado: req.body.estado,
-    correo: req.body.correo,
-    datosPersonales: datosPersonalId
+	    clave: req.body.clave,
+	    rol: req.body.rol,
+	    estado: req.body.estado,
+	    correo: req.body.correo,
+	    datosPersonales: datosPersonalId
     };
     
     const newUser = new User(usuario);

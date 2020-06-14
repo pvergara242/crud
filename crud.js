@@ -6,6 +6,7 @@ require("./models/database");
 const UserController = require("./controller/UserController");
 const ProveedorController = require("./controller/ProveedorController");
 const ProductoController = require("./controller/ProductoController");
+const InventarioController = require("./controller/InventarioController");
 const auth = require("./configuration/auth");
 
 crud.use(express.urlencoded({ extended: true }));
@@ -39,6 +40,9 @@ crud.get("/api/v1/productos/:ProductoId", ProductoController.find);
 crud.put("/api/v1/productos/:productoId", ProductoController.update);
 crud.delete("/api/v1/productos/:productoId", ProductoController.delete);
 crud.patch("/api/v1/productos/:productoId/activate", ProductoController.activate);
+
+// Crud de inventario
+crud.post("/api/v1/inventario", InventarioController.new);
 
 crud.listen(PORT, err => {
     if (err) {
