@@ -17,10 +17,6 @@ const ProductoSchema = new mongoose.Schema({
             type: String,
             required: true
         },
-        fechaVencimiento: {
-            type: Date,
-            required: true
-        },
         precio: {
             type: Number,
             required: true
