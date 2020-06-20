@@ -42,7 +42,7 @@ crud.delete("/api/v1/productos/:productoId", ProductoController.delete);
 crud.patch("/api/v1/productos/:productoId/activate", ProductoController.activate);
 
 // Crud de inventario
-crud.post("/api/v1/inventario", InventarioController.new);
+crud.post("/api/v1/inventario", InventarioController.validate('createInventario'), InventarioController.new);
 
 crud.listen(PORT, err => {
     if (err) {

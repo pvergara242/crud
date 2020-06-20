@@ -1,9 +1,21 @@
 const Inventario = require("../models/Inventario");
 const InventarioDiario = require("../models/InventarioDiario");
 const Productos = require("../models/Productos");
+const errorValidation = require("../util/errorValidationTransformer");
+
+const {
+    body
+} = require('express-validator');
 
 let InventarioController = {
     new: async(req, res) => {
+        const errors = errorValidation.validateRequest(req);
+
+        if (errors.length > 0) {
+            return res.status(400).send({
+                errors: errors
+            });
+        }
 
         var params = {
             _id: req.body.producto,
@@ -65,9 +77,9 @@ let InventarioController = {
                                 var newInventarioDiario;
 
                                 if (inventarioDiarioEncontrado && inventarioDiarioEncontrado !== null && inventarioDiarioEncontrado.length > 0) {
-                                    
+
                                     if (dateEquality(inventarioDiarioEncontrado[0].fecha, date)) {
-                                        
+
                                         newInventarioDiario = new InventarioDiario(inventarioDiarioEncontrado[0]);
                                         newInventarioDiario.cantidad = newInventarioDiario.cantidad + req.body.cantidad;
                                     } else {
@@ -86,7 +98,7 @@ let InventarioController = {
                                         fecha: date
                                     });
                                 }
-                                
+
                                 return newInventarioDiario.save({
                                     session: session
                                 });
@@ -95,7 +107,7 @@ let InventarioController = {
                             then(() => session.endSession()).
                             then(() => res.status(201).send()).
                             catch(err => {
-                                
+
                                 console.log("Error al crear inventario: ", err);
                                 session.abortTransaction();
                                 res.status(500).send({
@@ -134,6 +146,20 @@ let InventarioController = {
                     message: 'Error al crear inventario'
                 });
             });
+    },
+    validate: (method) => {
+        switch (method) {
+            case 'createInventario':
+                {
+                    return [
+                        body('producto', '40003').exists(),
+                        body('cantidad', '40004').exists().isInt().toInt(),
+                        body('codigoBarras', '40005').exists(),
+                        body('lote', '40006').exists(),
+                        body('fechaVencimiento', '40007').exists().isISO8601()
+                    ]
+                }
+        }
     }
 }
 
@@ -144,9 +170,9 @@ var dateEquality = (date1, date2) => {
 }
 
 function InventarioException(message, code) {
-   this.message = message;
-   this.code = code;
-   this.name = 'InventarioException';
+    this.message = message;
+    this.code = code;
+    this.name = 'InventarioException';
 }
 
 module.exports = InventarioController;
