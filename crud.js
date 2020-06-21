@@ -17,7 +17,7 @@ crud.use('/api/v1/proveedores', auth.authorize);
 crud.use('/api/v1/productos', auth.authorize);
 
 //crud usuarios 
-crud.post("/api/v1/usuarios", UserController.new);
+crud.post("/api/v1/usuarios", UserController.validate('nuevoUsuario'), UserController.new);
 crud.get("/api/v1/usuarios", auth.authorize, UserController.all);
 crud.get("/api/v1/usuarios/:Userid", auth.authorize, UserController.find);
 crud.put("/api/v1/usuarios/:Userid", auth.authorize, UserController.update);
