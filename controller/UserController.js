@@ -48,7 +48,7 @@ let UserController = {
 
 		DatosPersonales.findOne(params)
 			.then(datoPersonal => {
-				
+
 				if (datoPersonal && datoPersonal !== null) {
 					var userParams = {
 						estado: "Activo",
@@ -126,7 +126,6 @@ function funcCreateUsuario (req, res, datosPersonalId) {
 
 var actualizarUsuario = function funcActualizarUsuario (req, res, datosPersonalId) {
     const usuario = {
-    clave: req.body.clave,
     rol: req.body.rol,
     estado: req.body.estado,
     correo: req.body.correo,
@@ -200,8 +199,6 @@ function findAndUpdateDatosPersonales(req, res) {
     	var datosPersonalId;
         if (datoPersonalExistente && datoPersonalExistente !== null) {
             datosPersonalId = datoPersonalExistente._id;
-            console.log('datosPersonalId: ', datosPersonalId);
-            console.log('datoPersonalExistente: ', datoPersonalExistente);
 
             DatosPersonales.findByIdAndUpdate(datosPersonalId, { $set: datoPersonal }, { new: false })
             .then(datoPersonalActualizado => {
