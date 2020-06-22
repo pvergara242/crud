@@ -23,7 +23,12 @@ let UserController = {
                 res.status(200).send(result);
             })
             .catch(err => {
-                res.status(404).send(err);
+                console.log(err);
+
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al consultar usuarios'
+                });
             });
     },
     new: async(req, res) => {
@@ -39,10 +44,32 @@ let UserController = {
     },
     find: async(req, res) => {
         User.findById(req.params.Userid, (err, response) => {
-            !err ? res.status(200).send(response) : res.status(400).send(err);
+            if (response && response !== null) {
+                res.status(200).send(response);
+            } else if (err) {
+                console.log(err);
+
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al consultar usuario'
+                });
+            } else {
+                res.status(404).send({
+                    codigo: "40400",
+                    message: 'Error al consultar usuario'
+                });
+            }
         }).populate('datosPersonales');
     },
     update: async(req, res) => {
+    	const errors = errorValidation.validateRequest(req);
+
+        if (errors.length > 0) {
+            return res.status(400).send({
+                errors: errors
+            });
+        }
+        
         findAndUpdateDatosPersonales(req, res);
     },
     delete: async(req, res) => {
@@ -53,7 +80,22 @@ let UserController = {
         }, {
             new: false
         }, (err, response) => {
-            !err ? res.status(204).send() : res.status(400).send(err);
+        	console.log('response: ', response);
+        	if (response && response !== null) {
+        		res.status(204).send();
+            } else if (err) {
+                console.log(err);
+
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al inactivar usuario'
+                });
+            } else {
+                res.status(404).send({
+                    codigo: "40400",
+                    message: 'Error al inactivar usuario'
+                });
+            }
         });
     },
     activate: async(req, res) => {
@@ -64,10 +106,32 @@ let UserController = {
         }, {
             new: false
         }, (err, response) => {
-            !err ? res.status(204).send(response) : res.status(400).send(err);
+            if (response && response !== null) {
+        		res.status(204).send();
+            } else if (err) {
+            	console.log(err);
+
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al activar usuario'
+                });
+            } else {
+                res.status(404).send({
+                    codigo: "40400",
+                    message: 'Error al activar usuario'
+                });
+            }
         });
     },
     signIn: async(req, res) => {
+        const errors = errorValidation.validateRequest(req);
+
+        if (errors.length > 0) {
+            return res.status(400).send({
+                errors: errors
+            });
+        }
+
         var params = {
             numeroDocumento: req.body.numeroDocumento
         };
@@ -89,7 +153,8 @@ let UserController = {
                                     if (!err && err !== null) {
                                         console.log(err);
                                         res.status(500).send({
-                                            message: 'Error autenticando usuario'
+                                            codigo: "50002",
+                                            message: 'Error al ejecutar autenticación'
                                         });
                                     } else if (matches) {
                                         auth.generateToken(result)
@@ -106,7 +171,10 @@ let UserController = {
                                             })
                                             .catch(onRejected => {
                                                 console.log(err);
-                                                res.status(500).send(err);
+                                                res.status(500).send({
+                                                    codigo: "50003",
+                                                    message: 'Error al ejecutar autenticación'
+                                                });
                                             });
                                     } else {
                                         res.status(401).send({
@@ -122,7 +190,10 @@ let UserController = {
                         })
                         .catch(err => {
                             console.log(err);
-                            res.status(500).send(err);
+                            res.status(500).send({
+                                codigo: "50001",
+                                message: 'Error al ejecutar autenticación'
+                            });
                         });
                 } else {
                     res.status(401).send({
@@ -132,7 +203,10 @@ let UserController = {
             })
             .catch(err => {
                 console.log(err);
-                res.status(500).send(err);
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al ejecutar autenticación'
+                });
             });
     },
     validate: (method) => {
@@ -152,7 +226,30 @@ let UserController = {
                         body('clave', '40009').exists(),
                         body('rol', '40010').exists(),
                         body('fechaNacimiento', '40011').exists().isISO8601()
-                    ]
+                    ];
+                }
+            case 'actualizarUsuario':
+                {
+                    return [
+                        body('tipoDocumento', '40000').exists(),
+                        body('numeroDocumento', '40001').exists(),
+                        body('genero', '40002').exists(),
+                        body('nombres', '40003').exists(),
+                        body('apellidos', '40004').exists(),
+                        body('telefonoFijo', '40005').exists(),
+                        body('celular', '40006').exists(),
+                        body('direccion', '40007').exists(),
+                        body('correo', '40008').exists(),
+                        body('rol', '40009').exists(),
+                        body('fechaNacimiento', '40010').exists().isISO8601()
+                    ];
+                }
+            case 'signIn':
+                {
+                    return [
+                        body('numeroDocumento', '40000').exists(),
+                        body('pwd', '40001').exists()
+                    ];
                 }
         }
     }
@@ -170,28 +267,40 @@ function funcCreateUsuario(req, res, datosPersonalId) {
     const newUser = new User(usuario);
     newUser.save()
         .then(result => {
-            res.status(200).send(result);
+            res.status(201).send();
         })
         .catch(err => {
-            res.status(400).send(err);
+            console.log(err);
+
+            res.status(500).send({
+                codigo: "50002",
+                message: 'Error al crear usuario'
+            });
         });
 }
 
 var actualizarUsuario = function funcActualizarUsuario(req, res, datosPersonalId) {
     const usuario = {
         rol: req.body.rol,
-        estado: req.body.estado,
         correo: req.body.correo,
         datosPersonales: datosPersonalId
     };
 
-    const newUser = new User(usuario);
     User.findByIdAndUpdate(req.params.Userid, {
         $set: usuario
     }, {
         new: false
     }, (err, response) => {
-        !err ? res.status(204).send() : res.status(400).send(err);
+        if (!err) {
+            res.status(204).send();
+        } else {
+            console.log(err);
+
+            res.status(500).send({
+                codigo: "50002",
+                message: 'Error al actualizar usuario'
+            });
+        }
     });
 }
 
@@ -219,7 +328,7 @@ function findAndCreateDatosPersonales(req, res, callback) {
         .then(datoPersonalExistente => {
             var datosPersonalId;
             if (!datoPersonalExistente && datoPersonalExistente !== null) {
-                datosPersonalId = datoPersonalExistente._id;
+            	datosPersonalId = datoPersonalExistente._id;
                 callback(req, res, datosPersonalId);
             } else {
                 newDatoPersonal.save()
@@ -228,18 +337,26 @@ function findAndCreateDatosPersonales(req, res, callback) {
                         callback(req, res, datosPersonalId);
                     })
                     .catch(err => {
-                        res.status(500).send(err);
+                        console.log(err);
+
+                        res.status(500).send({
+                            codigo: "50001",
+                            message: 'Error al crear usuario'
+                        });
                     });
             }
         })
         .catch(err => {
-            res.status(400).send(err);
+            console.log(err);
+
+            res.status(500).send({
+                codigo: "50000",
+                message: 'Error al crear usuario'
+            });
         });
 }
 
 function findAndUpdateDatosPersonales(req, res) {
-    req.body.estado = 'Activo';
-
     const datoPersonal = {
         tipoDocumento: req.body.tipoDocumento,
         numeroDocumento: req.body.numeroDocumento,
@@ -272,7 +389,10 @@ function findAndUpdateDatosPersonales(req, res) {
                     })
                     .catch(err => {
                         console.log(err);
-                        res.status(500).send('Error actualizando usuario');
+                        res.status(500).send({
+                            codigo: "50001",
+                            message: 'Error al actualizar usuario'
+                        });
                     });
             } else {
                 const newDatoPersonal = new DatosPersonales(datoPersonal);
@@ -282,12 +402,22 @@ function findAndUpdateDatosPersonales(req, res) {
                         actualizarUsuario(req, res, datosPersonalId);
                     })
                     .catch(err => {
-                        res.status(500).send(err);
+                        console.log(err);
+
+                        res.status(500).send({
+                            codigo: "50003",
+                            message: 'Error al actualizar usuario'
+                        });
                     });
             }
         })
         .catch(err => {
-            res.status(400).send(err);
+            console.log(err);
+
+            res.status(500).send({
+                codigo: "50000",
+                message: 'Error al actualizar usuario'
+            });
         });
 }
 

@@ -153,7 +153,7 @@ let InventarioController = {
                 {
                     return [
                         body('producto', '40003').exists(),
-                        body('cantidad', '40004').exists().isInt().toInt(),
+                        body('cantidad', '40004').exists().isFloat().toFloat(),
                         body('codigoBarras', '40005').exists(),
                         body('lote', '40006').exists(),
                         body('fechaVencimiento', '40007').exists().isISO8601()

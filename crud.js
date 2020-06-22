@@ -13,31 +13,35 @@ crud.use(express.urlencoded({ extended: true }));
 crud.use(express.json());
 crud.use(cors());
 
+crud.use('/api/v1/usuarios', auth.authorize);
 crud.use('/api/v1/proveedores', auth.authorize);
 crud.use('/api/v1/productos', auth.authorize);
+crud.use('/api/v1/inventario', auth.authorize);
+
+//Login
+crud.post("/api/v1/auth/signin", UserController.validate('signIn'), UserController.signIn);
 
 //crud usuarios 
 crud.post("/api/v1/usuarios", UserController.validate('nuevoUsuario'), UserController.new);
-crud.get("/api/v1/usuarios", auth.authorize, UserController.all);
-crud.get("/api/v1/usuarios/:Userid", auth.authorize, UserController.find);
-crud.put("/api/v1/usuarios/:Userid", auth.authorize, UserController.update);
-crud.delete("/api/v1/usuarios/:Userid", auth.authorize, UserController.delete);
-crud.patch("/api/v1/usuarios/:Userid/activate", auth.authorize, UserController.activate);
-crud.post("/api/v1/auth/signin", UserController.signIn);
+crud.get("/api/v1/usuarios", UserController.all);
+crud.get("/api/v1/usuarios/:Userid", UserController.find);
+crud.put("/api/v1/usuarios/:Userid", UserController.validate('actualizarUsuario'), UserController.update);
+crud.delete("/api/v1/usuarios/:Userid", UserController.delete);
+crud.patch("/api/v1/usuarios/:Userid/activate", UserController.activate);
 
 // Crud de proveedores
-crud.post("/api/v1/proveedores", ProveedorController.new);
+crud.post("/api/v1/proveedores", ProveedorController.validate('nuevoProveedor'), ProveedorController.new);
 crud.get("/api/v1/proveedores", ProveedorController.all);
 crud.get("/api/v1/proveedores/:Proveedoresid", ProveedorController.find);
-crud.put("/api/v1/proveedores/:Proveedoresid", ProveedorController.update);
+crud.put("/api/v1/proveedores/:Proveedoresid", ProveedorController.validate('actualizarProveedor'), ProveedorController.update);
 crud.delete("/api/v1/proveedores/:proveedorId", ProveedorController.delete);
 crud.patch("/api/v1/proveedores/:Proveedoresid/activate", ProveedorController.activate);
 
 // Crud de proveedores
-crud.post("/api/v1/productos", ProductoController.new);
+crud.post("/api/v1/productos", ProductoController.validate('nuevoProducto'), ProductoController.new);
 crud.get("/api/v1/productos", ProductoController.all);
 crud.get("/api/v1/productos/:ProductoId", ProductoController.find);
-crud.put("/api/v1/productos/:productoId", ProductoController.update);
+crud.put("/api/v1/productos/:productoId", ProductoController.validate('actualizarProducto'), ProductoController.update);
 crud.delete("/api/v1/productos/:productoId", ProductoController.delete);
 crud.patch("/api/v1/productos/:productoId/activate", ProductoController.activate);
 
