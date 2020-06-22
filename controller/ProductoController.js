@@ -1,13 +1,20 @@
 const Productos = require("../models/Productos");
+const Proveedores = require("../models/Proveedores");
+const {
+    body
+} = require('express-validator');
+const errorValidation = require("../util/errorValidationTransformer");
 
 let ProductoController = {
-	all: async (req, res) => {
-		var params;
+    all: async(req, res) => {
+        var params;
 
         if (req.query.includeInactive && req.query.includeInactive === 'true') {
             params = {};
         } else {
-            params = { estado: "Activo" };
+            params = {
+                estado: "Activo"
+            };
         }
 
         Productos.find(params).populate('proveedor')
@@ -15,36 +22,176 @@ let ProductoController = {
                 res.status(200).send(result);
             })
             .catch(err => {
-                res.status(404).send(err);
+                console.log(err);
+
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al consultar productos'
+                });
             });
-	},
-	new: async (req, res) => {
-		req.body.estado = "Activo";
-        const newProducto = new Productos(req.body);
-        newProducto.save((err, response) => {
-            !err ? res.status(200).send(response) : res.status(400).send(err);
-        });
-	},
-	find: async(req, res) => {
-		Productos.findById(req.params.ProductoId, (err, response) => {
-            !err ? res.status(200).send(response) : res.status(404).send(err);
+    },
+    new: async(req, res) => {
+        const errors = errorValidation.validateRequest(req);
+
+        if (errors.length > 0) {
+            return res.status(400).send({
+                errors: errors
+            });
+        }
+
+        Proveedores.findById(req.params.Proveedoresid)
+            .then(result => {
+                if (result && result !== null) {
+                    return result;
+                } else {
+                    res.status(400).send({
+                        codigo: "40004",
+                        message: 'Error al crear producto'
+                    });
+                }
+            })
+            .then(result => {
+                req.body.estado = "Activo";
+                const newProducto = new Productos(req.body);
+                newProducto.save((err, response) => {
+                    if (!err) {
+                        res.status(201).send();
+                    } else {
+                        console.log(err);
+
+                        res.status(500).send({
+                            codigo: "50000",
+                            message: 'Error al crear producto'
+                        });
+                    }
+                });
+            })
+            .catch(err => {
+                console.log(err);
+
+                res.status(500).send({
+                    codigo: "50001",
+                    message: 'Error al crear producto'
+                });
+            });
+    },
+    find: async(req, res) => {
+        Productos.findById(req.params.ProductoId, (err, response) => {
+            if (response && response !== null) {
+                res.status(200).send(response);
+            } else if (err) {
+                console.log(err);
+
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al consultar producto'
+                });
+            } else {
+                res.status(404).send({
+                    codigo: "40400",
+                    message: 'Producto no existe'
+                });
+            }
         }).populate('proveedor');
-	},
-	update: async(req, res) => {
-    	Productos.findByIdAndUpdate(req.params.productoId, { $set: req.body }, { new: false }, (err, response) => {
-            !err ? res.status(204).send() : res.status(404).send(err);
+    },
+    update: async(req, res) => {
+        const errors = errorValidation.validateRequest(req);
+
+        if (errors.length > 0) {
+            return res.status(400).send({
+                errors: errors
+            });
+        }
+
+        Productos.findByIdAndUpdate(req.params.productoId, {
+            $set: req.body
+        }, {
+            new: false
+        }, (err, response) => {
+            if (!err) {
+                res.status(204).send();
+            } else {
+                console.log(err);
+
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al actualizar producto'
+                });
+            }
         });
-	},
-	delete: async(req, res) => {
-	    Productos.findByIdAndUpdate(req.params.productoId, { $set: { estado: "Inactivo" } }, { new: false }, (err, response) => {
-            !err ? res.status(204).send() : res.status(404).send(err);
+    },
+    delete: async(req, res) => {
+        Productos.findByIdAndUpdate(req.params.productoId, {
+            $set: {
+                estado: "Inactivo"
+            }
+        }, {
+            new: false
+        }, (err, response) => {
+            if (response && response !== null) {
+                res.status(204).send();
+            } else if (err) {
+                console.log(err);
+
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al inactivar producto'
+                });
+            } else {
+                res.status(404).send({
+                    codigo: "40400",
+                    message: 'Error al inactivar producto'
+                });
+            }
         });
-	},
-	activate: async(req, res) => {
-		Productos.findByIdAndUpdate(req.params.productoId, { $set: { estado: 'Activo' } }, { new: false }, (err, response) => {
-            !err ? res.status(204).send(response) : res.status(404).send(err);
+    },
+    activate: async(req, res) => {
+        Productos.findByIdAndUpdate(req.params.productoId, {
+            $set: {
+                estado: 'Activo'
+            }
+        }, {
+            new: false
+        }, (err, response) => {
+            if (response && response !== null) {
+                res.status(204).send();
+            } else if (err) {
+                console.log(err);
+
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al activar producto'
+                });
+            } else {
+                res.status(404).send({
+                    codigo: "40400",
+                    message: 'Error al activar producto'
+                });
+            }
         });
-	}
+    },
+    validate: (method) => {
+        switch (method) {
+            case 'nuevoProducto':
+                {
+                    return [
+                        body('proveedor', '40000').exists(),
+                        body('nombre', '40001').exists(),
+                        body('tipo', '40002').exists(),
+                        body('precio', '40003').exists().isFloat().toFloat()
+                    ]
+                }
+            case 'actualizarProducto':
+                {
+                    return [
+                        body('proveedor', '40000').exists(),
+                        body('nombre', '40001').exists(),
+                        body('tipo', '40002').exists(),
+                        body('precio', '40003').exists().isFloat().toFloat()
+                    ]
+                }
+        }
+    }
 }
 
 module.exports = ProductoController;
