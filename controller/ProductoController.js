@@ -39,15 +39,12 @@ let ProductoController = {
             });
         }
 
-        Proveedores.findById(req.params.Proveedoresid)
+        Proveedores.findById(req.body.proveedor)
             .then(result => {
                 if (result && result !== null) {
                     return result;
                 } else {
-                    res.status(400).send({
-                        codigo: "40004",
-                        message: 'Error al crear producto'
-                    });
+                    throw new ProductoException('Error al crear producto', "40004", 400);
                 }
             })
             .then(result => {
@@ -67,12 +64,20 @@ let ProductoController = {
                 });
             })
             .catch(err => {
-                console.log(err);
+                if (err.name === 'ProductoException') {
 
-                res.status(500).send({
-                    codigo: "50001",
-                    message: 'Error al crear producto'
-                });
+                    res.status(err.httpCode).send({
+                        codigo: err.code,
+                        message: err.message
+                    });
+                } else {
+                    console.log(err);
+
+                    res.status(500).send({
+                        codigo: "50001",
+                        message: 'Error al crear producto'
+                    });
+                }
             });
     },
     find: async(req, res) => {
@@ -192,6 +197,13 @@ let ProductoController = {
                 }
         }
     }
+}
+
+function ProductoException(message, code, httpCode) {
+    this.message = message;
+    this.code = code;
+    this.name = 'ProductoException';
+    this.httpCode = httpCode;
 }
 
 module.exports = ProductoController;
