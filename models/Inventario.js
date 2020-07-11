@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const InventarioSchema = new mongoose.Schema({
         producto: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Productos'
+            ref: 'productos'
         },
         cantidad: {
             type: Number,
