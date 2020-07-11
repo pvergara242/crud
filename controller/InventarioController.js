@@ -160,6 +160,71 @@ let InventarioController = {
                     ]
                 }
         }
+    },
+    find: async(req, res) => {
+
+        var params = {
+            codigoBarras: req.params.codigoBarras
+        };
+
+        Inventario.findOne(params).populate('producto')
+            .then(resultInventario => {
+
+                if (resultInventario && resultInventario !== null) {
+
+                    var inventarioDiarioEncontrado = null;
+                    params = {
+                        producto: resultInventario.producto._id
+                    };
+                    InventarioDiario.find(params).sort({
+                            "fecha": -1
+                        }).limit(1)
+                        .then(resultInventarioDiario => {
+
+                            if (!resultInventarioDiario || resultInventarioDiario === null || resultInventarioDiario.lenght === 0) {
+                                throw new InventarioException('Error al consultar inventario', "40001");
+                            }
+                            
+                            res.status(200).send({
+                                    cantidad: resultInventarioDiario[0].cantidad,
+                                    producto: {
+                                        id: resultInventario.producto._id,
+                                        nombre: resultInventario.producto.nombre
+                                    }
+                                });
+                        })
+                        .catch(err => {
+                            console.log("Error al consultar inventario: ", err);
+
+                            if (err.name === 'InventarioException') {
+
+                                res.status(400).send({
+                                    codigo: err.code,
+                                    message: err.message
+                                });
+                            } else {
+
+                                res.status(500).send({
+                                    codigo: "50001",
+                                    message: 'Error al consultar inventario'
+                                });
+                            }
+                        });
+                } else {
+                    res.status(404).send({
+                        codigo: "40400",
+                        message: 'No se encontraron registros'
+                    });
+                }
+            })
+            .catch(err => {
+                console.log("Error al consultar inventario: ", err);
+
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al consultar inventario'
+                });
+            });
     }
 }
 
