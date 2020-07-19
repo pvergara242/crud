@@ -181,7 +181,7 @@ let InventarioController = {
                         }).limit(1)
                         .then(resultInventarioDiario => {
 
-                            if (!resultInventarioDiario || resultInventarioDiario === null || resultInventarioDiario.lenght === 0) {
+                            if (!resultInventarioDiario || resultInventarioDiario === null || resultInventarioDiario.length === 0) {
                                 throw new InventarioException('Error al consultar inventario', "40001");
                             }
                             
