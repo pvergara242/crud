@@ -1,7 +1,13 @@
 const ConsecutivoFactura = require("../models/ConsecutivoFactura");
 const DetalleFactura = require("../models/DetalleFactura");
 const Factura = require("../models/Factura");
+const Inventario = require("../models/Inventario");
 const auth = require("../configuration/auth");
+const errorValidation = require("../util/errorValidationTransformer");
+
+const {
+    body
+} = require('express-validator');
 
 let FacturaController = {
     findByUser: async(req, res) => {
@@ -20,7 +26,7 @@ let FacturaController = {
             estado: 'PENDIENTE'
         };
 
-        Factura.find(params, 'consecutivo fecha total estado').populate('consecutivo')
+        Factura.find(params, 'numero fecha total estado').populate('consecutivo')
             .then(resultFactura => {
 
                 if (!resultFactura || resultFactura === null || resultFactura.length === 0) {
@@ -67,7 +73,7 @@ let FacturaController = {
 
                         var newFactura = {
                             usuario: req.params.userId,
-                            consecutivo: newConsecutivo._id,
+                            numero: newConsecutivo.numero,
                             fecha: new Date(),
                             total: 0,
                             estado: 'PENDIENTE'
@@ -115,14 +121,31 @@ let FacturaController = {
                         }
                     });
                 } else {
-                    DetalleFactura.find({ factura: resultFactura[0]._id }).populate('inventario')
+                    DetalleFactura.find({ factura: resultFactura[0]._id })
+                        .populate({ path: 'inventario', populate: { path: 'producto' }})
                         .then(resultDetallesFactura => {
+
+                            var detalles = [];
+
+                            for(let j = 0, lengthDetallesFactura = resultDetallesFactura.length; j < lengthDetallesFactura; j++){
+                                var detalle = {
+                                    cantidadCompra: resultDetallesFactura[j].cantidad,
+                                    cantidad: resultDetallesFactura[j].inventario.cantidad,
+                                    codigoBarras: resultDetallesFactura[j].inventario.codigoBarras,
+                                    producto: {
+                                        id: resultDetallesFactura[j].inventario.producto._id,
+                                        nombre: resultDetallesFactura[j].inventario.producto.nombre
+                                    }
+                                }
+                                detalles.push(detalle);
+                            }
+
                             var facturaEncontrada = {
-                                numero: resultFactura[0].consecutivo.numero,
+                                numero: resultFactura[0].numero,
                                 fecha: resultFactura[0].fecha,
                                 total: resultFactura[0].total,
                                 estado: resultFactura[0].estado,
-                                detalles: resultDetallesFactura
+                                detalles: detalles
                             };
 
                             res.status(200).send(facturaEncontrada);
@@ -145,6 +168,116 @@ let FacturaController = {
                     message: 'Error al consultar factura'
                 });
             });
+    },
+    addDetalleFactura: async(req, res) => {
+
+        const errors = errorValidation.validateRequest(req);
+
+        if (errors.length > 0) {
+            return res.status(400).send({
+                errors: errors
+            });
+        }
+
+        var payload = auth.parseToken(req.headers.authorization);
+
+        if (payload === null || payload.id != req.params.userId) {
+            return res.status(403).send({
+                    codigo: "40300",
+                    message: 'Error al agregar producto a la factura'
+                });
+        }
+
+        let numeroFactura = parseInt(req.params.numeroFactura);
+
+        var params = {
+            numero: numeroFactura,
+            usuario: req.params.userId,
+            estado: 'PENDIENTE'
+        };
+
+        Factura.find(params, '_id numero')
+            .then(resultFactura => {
+
+                if (!resultFactura || resultFactura === null || resultFactura.length === 0) {
+                    res.status(404).send({
+                        codigo: "40400",
+                        message: 'Error al agregar producto a la factura'
+                    });
+                    
+                } else {
+                    let inventarioEncontrado = null;
+                    Inventario.findOne({ codigoBarras: req.body.codigoBarras }).populate('producto')
+                    .then(resultInventario => {
+                        if (resultInventario && resultInventario !== null) {
+                            return resultInventario;
+                        }
+
+                        throw new FacturaException('Error al agregar producto a la factura', "40001", 400);
+                    })
+                    .then(inventario => {
+                        inventarioEncontrado = inventario;
+
+                        var nuevoDetalleFactura = {
+                            factura: resultFactura[0]._id,
+                            inventario: inventario._id,
+                            cantidad: 1,
+                            precio: inventario.producto.precio,
+                            subtotal: inventario.producto.precio
+                        };
+
+                        return new DetalleFactura(nuevoDetalleFactura).save();
+                    })
+                    .then(detalleFactura => {
+                        var responseDetalleFactura = {
+                            cantidadCompra: detalleFactura.cantidad,
+                            cantidad: inventarioEncontrado.cantidad,
+                            codigoBarras: inventarioEncontrado.codigoBarras,
+                            producto: {
+                                id: inventarioEncontrado.producto._id,
+                                nombre: inventarioEncontrado.producto.nombre
+                            }
+                        };
+
+                        res.status(201).send(responseDetalleFactura);
+                    })
+                    .catch(err => {
+                        console.log(err);
+
+                        if (err.name === 'FacturaException') {
+
+                            res.status(err.httpCode).send({
+                                codigo: err.code,
+                                message: err.message
+                            });
+                        } else {
+
+                            res.status(500).send({
+                                codigo: "50001",
+                                message: 'Error al agregar producto a la factura'
+                            });
+                        }
+                    });
+                }
+            })
+            .catch(err => {
+                console.log("Error al consultar factura: ", err);
+
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al agregar producto a la factura'
+                });
+            });
+    },
+    validate: (method) => {
+        switch (method) {
+            case 'nuevoDetalleFactura':
+                {
+                    return [
+                        body('codigoBarras', '40000').exists().trim().isLength({ min: 1 })
+                    ]
+                }
+        }
     }
 }
 
