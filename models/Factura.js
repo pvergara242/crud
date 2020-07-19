@@ -5,9 +5,9 @@ const FacturaSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Usuarios'
         },
-        consecutivo: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'consecutivoFactura'
+        numero: {
+            type: Number,
+            required: true
         },
         fecha: {
             type: Date,

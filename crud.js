@@ -51,6 +51,7 @@ crud.post("/api/v1/inventario", InventarioController.validate('createInventario'
 crud.get("/api/v1/inventario/:codigoBarras", InventarioController.find);
 
 crud.get("/api/v1/usuarios/:userId/factura", FacturaController.findByUser);
+crud.post("/api/v1/usuarios/:userId/factura/:numeroFactura/detalle", FacturaController.validate('nuevoDetalleFactura'), FacturaController.addDetalleFactura);
 
 crud.listen(PORT, err => {
     if (err) {
