@@ -52,6 +52,7 @@ crud.get("/api/v1/inventario/:codigoBarras", InventarioController.find);
 
 crud.get("/api/v1/usuarios/:userId/factura", FacturaController.findByUser);
 crud.post("/api/v1/usuarios/:userId/factura/:numeroFactura/detalle", FacturaController.validate('nuevoDetalleFactura'), FacturaController.addDetalleFactura);
+crud.post("/api/v1/usuarios/:userId/factura/:numeroFactura/pagar", FacturaController.pagarFactura);
 
 crud.listen(PORT, err => {
     if (err) {

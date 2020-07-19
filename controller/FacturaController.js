@@ -2,6 +2,7 @@ const ConsecutivoFactura = require("../models/ConsecutivoFactura");
 const DetalleFactura = require("../models/DetalleFactura");
 const Factura = require("../models/Factura");
 const Inventario = require("../models/Inventario");
+const InventarioDiario = require("../models/InventarioDiario");
 const auth = require("../configuration/auth");
 const errorValidation = require("../util/errorValidationTransformer");
 
@@ -266,6 +267,137 @@ let FacturaController = {
                 res.status(500).send({
                     codigo: "50000",
                     message: 'Error al agregar producto a la factura'
+                });
+            });
+    },
+    pagarFactura: async(req, res) => {
+
+        var payload = auth.parseToken(req.headers.authorization);
+
+        if (payload === null || payload.id != req.params.userId) {
+            return res.status(403).send({
+                    codigo: "40300",
+                    message: 'Error al agregar producto a la factura'
+                });
+        }
+
+        let numeroFactura = parseInt(req.params.numeroFactura);
+
+        var params = {
+            numero: numeroFactura,
+            usuario: req.params.userId,
+            estado: 'PENDIENTE'
+        };
+
+        Factura.find(params, '_id numero')
+            .then(resultFactura => {
+
+                if (!resultFactura || resultFactura === null || resultFactura.length === 0) {
+                    res.status(404).send({
+                        codigo: "40400",
+                        message: 'Error al pagar la factura'
+                    });
+                    
+                } else {
+                    var detallesFactura = null;
+                    DetalleFactura.find({ factura: resultFactura[0]._id })
+                        .populate({ path: 'inventario', populate: { path: 'producto' }})
+                        .then(resultDetallesFactura => {
+
+                            if (!resultDetallesFactura || resultDetallesFactura === null || resultDetallesFactura.length === 0) {
+                                throw new FacturaException('Error al pagar la factura', "40000", 400);
+                            }
+
+                            detallesFactura = resultDetallesFactura;
+
+                            var productos = [];
+
+                            for(let j = 0, lengthDetallesFactura = resultDetallesFactura.length; j < lengthDetallesFactura; j++){
+                                productos.push(resultDetallesFactura[j].inventario.producto._id);
+                            }
+
+                            return InventarioDiario.find({ producto: { $in: productos}, cantidad: { $gt: 0} })
+                            .populate('producto')
+                            .sort({
+                                "fecha": -1
+                            });
+                        })
+                        .then(inventariosDiario => {
+                            
+                            for(let j = 0, length2 = detallesFactura.length; j < length2; j++){
+                                for(let k = 0, length3 = inventariosDiario.length; k < length3; k++){
+                                    if (detallesFactura[j].inventario.producto._id.toString() === inventariosDiario[k].producto._id.toString()) {
+                                        inventariosDiario[k].cantidad = inventariosDiario[k].cantidad - detallesFactura[j].cantidad;
+
+                                        var inventarioDiarioActualizado = new InventarioDiario(inventariosDiario[k]);
+
+                                        inventarioDiarioActualizado.save((err, result) => {
+                                            if (err) {
+                                                console.log(err);
+
+                                                throw new FacturaException('Error al pagar la factura', "50002", 500);
+                                            }
+                                        });
+                                        break;
+                                    }
+                                }
+                            }         
+                        })
+                        .then(() => {
+                            resultFactura[0].estado = 'PROCESADO';
+
+                            resultFactura[0].save();
+                        })
+                        .then(() => {
+                            var detalles = [];
+
+                            for(let j = 0, lengthDetallesFactura = detallesFactura.length; j < lengthDetallesFactura; j++){
+                                var detalle = {
+                                    cantidadCompra: detallesFactura[j].cantidad,
+                                    codigoBarras: detallesFactura[j].inventario.codigoBarras,
+                                    producto: {
+                                        id: detallesFactura[j].inventario.producto._id,
+                                        nombre: detallesFactura[j].inventario.producto.nombre
+                                    }
+                                }
+                                detalles.push(detalle);
+                            }
+
+                            var facturaEncontrada = {
+                                numero: resultFactura[0].numero,
+                                fecha: resultFactura[0].fecha,
+                                total: resultFactura[0].total,
+                                estado: resultFactura[0].estado,
+                                detalles: detalles
+                            };
+
+                            res.status(200).send(facturaEncontrada);
+                        })
+                        .catch(err => {
+                            console.log(err);
+
+                            if (err.name === 'FacturaException') {
+
+                                res.status(err.httpCode).send({
+                                    codigo: err.code,
+                                    message: err.message
+                                });
+                            } else {
+
+                                res.status(500).send({
+                                    codigo: "50001",
+                                    message: 'Error al pagar la factura'
+                                });
+                            }
+                        });
+                }
+            })
+            .catch(err => {
+                console.log("Error al consultar factura: ", err);
+
+                res.status(500).send({
+                    codigo: "50000",
+                    message: 'Error al pagar la factura'
                 });
             });
     },
