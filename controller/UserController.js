@@ -165,7 +165,8 @@ let UserController = {
                                                         nombres: datoPersonal.nombres,
                                                         apellidos: datoPersonal.apellidos,
                                                         nombreCompleto: datoPersonal.nombreCompleto,
-                                                        rol: result.rol
+                                                        rol: result.rol,
+                                                        id: result._id
                                                     }
                                                 });
                                             })

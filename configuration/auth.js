@@ -45,7 +45,8 @@ auth.refresh = (req, res) => {
     }
 
     const newToken = jwt.sign({
-        correo: payload.correo
+        correo: payload.correo,
+        id: payload.id
     }, auth.secret, {
         algorithm: "HS256",
         expiresIn: 60 * 60,
@@ -58,11 +59,37 @@ auth.refresh = (req, res) => {
 
 auth.generateToken = async function(user) {
     return jwt.sign({
-        correo: user.correo
+        correo: user.correo,
+        id: user._id
     }, auth.secret, {
         algorithm: "HS256",
         expiresIn: 60 * 60,
     });
+}
+
+auth.parseToken = (authorization) => {
+    const token = authorization;
+
+    if (!token) {
+        return null;
+    }
+
+    var payload;
+    try {
+        payload = jwt.verify(token, auth.secret);
+    } catch (e) {
+        if (e instanceof jwt.JsonWebTokenError) {
+            return null;
+        }
+        return null;
+    }
+
+    const nowUnixSeconds = Math.round(Number(new Date()) / 1000);
+    if (payload.exp - nowUnixSeconds < 60) {
+        return null;
+    }
+
+    return payload;
 }
 
 module.exports = auth;
