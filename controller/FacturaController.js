@@ -219,19 +219,32 @@ let FacturaController = {
                     .then(inventario => {
                         inventarioEncontrado = inventario;
 
-                        var nuevoDetalleFactura = {
+                        return DetalleFactura.findOne({
                             factura: resultFactura[0]._id,
-                            inventario: inventario._id,
-                            cantidad: 1,
-                            precio: inventario.producto.precio,
-                            subtotal: inventario.producto.precio
-                        };
+                            inventario: inventario._id
+                        })
+                    })
+                    .then(detalleFactura => {
+
+                        var nuevoDetalleFactura = detalleFactura;
+
+                        if (nuevoDetalleFactura && nuevoDetalleFactura !== null) {
+                            nuevoDetalleFactura.cantidad = nuevoDetalleFactura.cantidad + 1; 
+                        } else {
+                            nuevoDetalleFactura = {
+                                factura: resultFactura[0]._id,
+                                inventario: inventarioEncontrado._id,
+                                cantidad: 1,
+                                precio: inventarioEncontrado.producto.precio,
+                                subtotal: inventarioEncontrado.producto.precio
+                            };
+                        }
 
                         return new DetalleFactura(nuevoDetalleFactura).save();
                     })
-                    .then(detalleFactura => {
+                    .then(nuevoDetalleFactura => {
                         var responseDetalleFactura = {
-                            cantidadCompra: detalleFactura.cantidad,
+                            cantidadCompra: nuevoDetalleFactura.cantidad,
                             cantidad: inventarioEncontrado.cantidad,
                             codigoBarras: inventarioEncontrado.codigoBarras,
                             producto: {
